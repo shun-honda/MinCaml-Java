@@ -1,0 +1,120 @@
+File
+    = { (_ @Expression)* _ EOF #Source }
+
+_
+    = (S / COMMENT)*
+
+S
+    = [ \t\n\r]
+
+COMMENT
+    = '(*' (!'*)' .)* '*)'
+
+EOF
+    = !.
+
+W
+    = [a-z][a-zA-Z0-9_]*
+
+"+"   = '+' !'.'
+"-"   = '-' !'.'
+"<"    = '<' ![=-]
+">"    = '>' !'='
+
+"true" = 'true' !W
+"false" = 'false' !W
+"if" = 'if' !W
+"then" = 'then' !W
+"else" = 'else' !W
+"let" = 'let' !W
+"in" = 'in' !W
+"rec" = 'rec' !W
+"Array.create" = 'Array.create' !W
+
+KEYWORD
+    = "true" / "false" / "if" / "then" / "else"
+    / "let"  / "in" / "rec" / "Array.create"
+
+Expression
+    = CompoundExpression (_ ';')?
+    / EqualityExpression (_ ';')?
+
+CompoundExpression
+    = IfStatement
+    / RecursiveFunctionDeclaration
+    / VariableDeclaration
+    / LetTupleExpression
+    / ArrayCreateExpression
+
+IfStatement
+   = { "if" _ @Expression _ @{"then" _ @Expression #Then } _ @{"else" _ @Expression #Else}  #If }
+
+RecursiveFunctionDeclaration
+    = { "let" _ "rec" _ @Identifier _ @FormalArgList _ '=' _ @Expression _ "in" _ @Expression #FunctionDeclaration }
+
+FormalArgList
+    = { @Identifier (_ @Identifier)* #FormalArgList }
+
+VariableDeclaration
+    = { "let" _ @Identifier _ '=' _ @Expression _ "in" _ @Expression #VarDecl }
+
+LetTupleExpression
+    = { "let" _ '(' _ @Pat _ ')' _ '=' _ @Expression _ "in" _ @Expression #LetTuple}
+
+Pat
+    = { @Identifier (_ ',' _ @Identifier)+ #Pat }
+
+ArrayCreateExpression
+    = { "Array.create" _ @GetArrayElementExpression _ @GetArrayElementExpression #ArrayCreate }
+
+EqualityExpression
+    = RelationalExpression {@ _ '=' #Equals _ @RelationalExpression }*
+
+RelationalExpression
+    = AdditiveExpression {@ _ addRelationalOperator _ @AdditiveExpression }*
+
+AdditiveExpression
+    = MultiplicativeExpression {@ _ ( '+.' #FAdd / "+" #Add / '-.' #FSub / "-" #Sub ) _ @MultiplicativeExpression }*
+
+MultiplicativeExpression
+    = UnaryExpression {@ _ ( '*.' #FMul / '/.' #FDiv) _ @UnaryExpression }*
+
+inline addUnaryOperator
+    = '-.'     #FMinus
+    / '-'      #Minus
+    / '!'      #LogicalNot
+
+public UnaryExpression
+    = FunctionCall / { addUnaryOperator _ @UnaryExpression }
+
+inline addRelationalOperator
+    = '<' ('=' #LessThanEquals / #LessThan)
+    / '>' ('=' #GreaterThanEquals / #GreaterThan)
+
+FunctionCall
+    = GetArrayElementExpression {@ _ @ActualArgList #FunctionCall }?
+
+ActualArgList
+    = { @GetArrayElementExpression (_ @GetArrayElementExpression)* #ActualArgList }
+
+GetArrayElementExpression
+    = SimpleExpression {@ '.' '(' _ @Expression _ ')' #ArrayElement }*
+
+SimpleExpression
+  = '(' _ Expression _ ')'
+  / '(' _ ')'
+  / Bool
+  / Number
+  / Identifier
+
+Bool
+  = { ("true" #True / "false" #False) }
+
+Number
+  = { DIGIT ('.' DIGIT #Float / #Integer ) }
+
+DIGIT
+  = [0-9]+
+
+Identifier
+  = !KEYWORD { W #Name }
