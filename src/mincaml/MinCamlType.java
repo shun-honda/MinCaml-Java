@@ -25,7 +25,7 @@ public abstract class MinCamlType {
 		return this.getName();
 	}
 
-	public final static MinCamlType VoidType = new MinCamlPrimitiveType("void");
+	public final static MinCamlType DefualtType = new MinCamlPrimitiveType("int");
 
 	public static MinCamlType newErrorType(MinCamlTree node, String msg) {
 		return new MinCamlErrorType(node, msg);

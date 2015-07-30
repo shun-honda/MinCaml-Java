@@ -7,6 +7,7 @@ import nez.ast.Tag;
 
 public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosition {
 	MinCamlType typed = null;
+	MinCamlTypeRule matched = null;
 
 	protected MinCamlTree(Tag tag, Source source, long pos, int len, int size, Object value) {
 		super(tag, source, pos, len, size > 0 ? new MinCamlTree[size] : null, value);
