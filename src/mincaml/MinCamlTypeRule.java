@@ -1,7 +1,5 @@
 package mincaml;
 
-import nez.konoha.KonohaTransducer;
-
 public abstract class MinCamlTypeRule {
 	String name;
 	int size;
@@ -20,9 +18,10 @@ public abstract class MinCamlTypeRule {
 		return this.size;
 	}
 
-	public void match(KonohaTransducer konoha, MinCamlTree node) {
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		node.matched = this;
 		node.typed = MinCamlType.DefualtType;
+		return node.typed;
 	}
 
 }

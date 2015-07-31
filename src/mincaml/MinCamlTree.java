@@ -47,4 +47,8 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 		return keyTag(t.getName());
 	}
 
+	public final String getRuleName() {
+		return keyTag(this.getTag());
+	}
+
 }
