@@ -11,7 +11,7 @@ public class MinCamlLanguage {
 		this.defineLiteral(mincaml, "#False", "bool");
 		this.defineLiteral(mincaml, "#Integer", "int");
 		this.defineLiteral(mincaml, "#Float", "float");
-		this.defineLiteral(mincaml, "#String", "string");
+		// this.defineLiteral(mincaml, "#String", "string");
 
 		this.defineBinary(mincaml, "#Add", "int", "int", "int", "+");
 	}
@@ -46,6 +46,7 @@ class TopLevel extends MinCamlTypeRule {
 		for(MinCamlTree sub : node) {
 			mincaml.typeCheck(sub);
 		}
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }
@@ -57,6 +58,11 @@ class VarDecl extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		for(MinCamlTree sub : node) {
+			mincaml.typeCheck(sub);
+		}
+		MinCamlType type = mincaml.typeCheck(node.get(1));
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }
@@ -68,6 +74,10 @@ class Variable extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		for(MinCamlTree sub : node) {
+			mincaml.typeCheck(sub);
+		}
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }
@@ -79,6 +89,10 @@ class FunctionDecl extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		for(MinCamlTree sub : node) {
+			mincaml.typeCheck(sub);
+		}
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }
@@ -90,6 +104,10 @@ class FunctionCall extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		for(MinCamlTree sub : node) {
+			mincaml.typeCheck(sub);
+		}
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }
@@ -103,7 +121,8 @@ class Literal extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		return MinCamlType.DefualtType;
+		node.setType(this.type);
+		return this.type;
 	}
 }
 
@@ -116,6 +135,10 @@ class Operator extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		for(MinCamlTree sub : node) {
+			mincaml.typeCheck(sub);
+		}
+		node.setType(MinCamlType.DefualtType);
 		return MinCamlType.DefualtType;
 	}
 }

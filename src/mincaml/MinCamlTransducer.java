@@ -3,6 +3,8 @@ package mincaml;
 import java.util.HashMap;
 import java.util.Map;
 
+import nez.main.Verbose;
+
 public class MinCamlTransducer {
 	Map<String, MinCamlType> typeMap;
 	Map<String, MinCamlTypeRule> typeRuleMap;
@@ -33,7 +35,21 @@ public class MinCamlTransducer {
 	}
 
 	public final MinCamlType typeCheck(MinCamlTree node) {
-		node.matched = this.typeRuleMap.get(node.getRuleName());
+		String rule = node.getRuleName();
+		node.matched = this.typeRuleMap.get(rule);
+		if(node.matched == null) {
+			System.out.println("undifined rule: '" + rule + "'\n" + node);
+			return null;
+		}
 		return node.matched.match(this, node);
+	}
+
+	boolean eval(MinCamlTree node) {
+		if(node != null) {
+			this.typeCheck(node);
+			Verbose.println("typed: \n" + node);
+			return true;
+		}
+		return false;
 	}
 }

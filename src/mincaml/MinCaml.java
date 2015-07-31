@@ -47,21 +47,23 @@ public class MinCaml {
 		return mincamlGrammar.newGrammar("File");
 	}
 
-	public final static MinCamlTree parse(String urn, int linenum, String text) {
+	public final static MinCamlTree parse(MinCamlTransducer mincaml, String urn, int linenum, String text) {
 		SourceContext source = SourceContext.newStringSourceContext(urn, linenum, text);
 		MinCamlTree node = (MinCamlTree) grammar.parse(source, treeTransducer);
 		if(node == null) {
 			ConsoleUtils.println(source.getSyntaxErrorMessage());
 		}
 		System.out.println("parsed:\n" + node + "\n");
+		mincaml.eval(node);
 		return node;
 	}
 
 	private static void shell() {
 		int linenum = 1;
 		String command = null;
+		MinCamlTransducer mincaml = new MinCamlTransducer();
 		while((command = readLine()) != null) {
-			parse("<stdio>", linenum, command);
+			parse(mincaml, "<stdio>", linenum, command);
 			linenum += (command.split("\n").length);
 		}
 	}

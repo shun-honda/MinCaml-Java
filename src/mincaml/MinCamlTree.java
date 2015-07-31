@@ -34,7 +34,7 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 	public void stringfy(String indent, StringBuilder sb) {
 		super.stringfy(indent, sb);
 		if(typed != null) {
-			sb.append(" :");
+			sb.append(": ");
 			sb.append(typed.toString());
 		}
 	}
@@ -49,6 +49,15 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 
 	public final String getRuleName() {
 		return keyTag(this.getTag());
+	}
+
+	public final MinCamlType setType(MinCamlType type) {
+		this.typed = type;
+		return type;
+	}
+
+	public final MinCamlType getType(MinCaml type) {
+		return this.typed;
 	}
 
 }
