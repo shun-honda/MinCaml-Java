@@ -58,12 +58,12 @@ class VarDecl extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
-		}
+		MinCamlTree nameNode = node.get(0);
 		MinCamlType type = mincaml.typeCheck(node.get(1));
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		nameNode.setType(type);
+		mincaml.setType(nameNode.getText(), type);
+		MinCamlType retType = mincaml.typeCheck(node.get(2));
+		return node.setType(retType);
 	}
 }
 
@@ -74,11 +74,8 @@ class Variable extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
-		}
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		MinCamlType type = mincaml.getType(node);
+		return node.setType(type);
 	}
 }
 
