@@ -1,5 +1,6 @@
 File
-    = { (_ @Expression)* _ EOF #Source }
+    = { _ @Expression (_ ';' _ @Expression)* _ EOF #Source }
+    / { _ EOF #Source }
 
 _
     = (S / COMMENT)*
@@ -36,8 +37,8 @@ KEYWORD
     / "let"  / "in" / "rec" / "Array.create"
 
 Expression
-    = CompoundExpression (_ ';')?
-    / EqualityExpression (_ ';')?
+    = CompoundExpression
+    / EqualityExpression
 
 CompoundExpression
     = IfStatement
