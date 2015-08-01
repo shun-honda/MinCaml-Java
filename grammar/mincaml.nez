@@ -77,7 +77,7 @@ AdditiveExpression
     = MultiplicativeExpression {@ _ ( '+.' #FAdd / "+" #Add / '-.' #FSub / "-" #Sub ) _ @MultiplicativeExpression }*
 
 MultiplicativeExpression
-    = UnaryExpression {@ _ ( '*.' #FMul / '/.' #FDiv) _ @UnaryExpression }*
+    = UnaryExpression {@ _ ( '*.' #FMul / '*' #Mul / '/.' #FDiv / '/' #Div) _ @UnaryExpression }*
 
 inline addUnaryOperator
     = '-.'     #FMinus
