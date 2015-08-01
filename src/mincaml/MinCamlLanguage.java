@@ -14,6 +14,13 @@ public class MinCamlLanguage {
 		// this.defineLiteral(mincaml, "#String", "string");
 
 		this.defineBinary(mincaml, "#Add", "int", "int", "int", "+");
+		this.defineBinary(mincaml, "#Sub", "int", "int", "int", "-");
+		this.defineBinary(mincaml, "#Mul", "int", "int", "int", "*");
+		this.defineBinary(mincaml, "#Div", "int", "int", "int", "/");
+		this.defineBinary(mincaml, "#FAdd", "float", "float", "float", "+.");
+		this.defineBinary(mincaml, "#FSub", "float", "float", "float", "-.");
+		this.defineBinary(mincaml, "#FMul", "float", "float", "float", "*.");
+		this.defineBinary(mincaml, "#FDiv", "float", "float", "float", "/.");
 	}
 
 	private String key(String tagname) {
@@ -31,7 +38,7 @@ public class MinCamlLanguage {
 		MinCamlType t1 = mincaml.getType(type1);
 		MinCamlType t2 = mincaml.getType(type2);
 		MinCamlType[] types = { rt, t1, t2 };
-		mincaml.setTypeRule(new Operator(tname, types));
+		mincaml.setTypeRule(new Operator(tname, types, op));
 	}
 
 }
@@ -43,11 +50,11 @@ class TopLevel extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlType type = MinCamlType.DefualtType;
 		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
+			type = mincaml.typeCheck(sub);
 		}
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		return node.setType(type);
 	}
 }
 
@@ -125,17 +132,24 @@ class Literal extends MinCamlTypeRule {
 
 class Operator extends MinCamlTypeRule {
 	MinCamlType[] types;
+	String op;
 
-	public Operator(String name, MinCamlType[] types) {
+	public Operator(String name, MinCamlType[] types, String op) {
 		super(name, types.length - 1);
 		this.types = types;
+		this.op = op;
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
+		for(int i = 0; i < node.size(); i++) {
+			MinCamlTree sub = node.get(i);
+			MinCamlType nodeType = mincaml.typeCheck(sub);
+			MinCamlType argType = types[i + 1];
+			if(!nodeType.equals(argType)) {
+				System.out.println("Type Error: Argument" + i + 1 + " of operator '" + this.op + "' is " + argType
+						+ " type, but " + nodeType + " type found" + sub + "\n");
+			}
 		}
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		return node.setType(this.types[0]);
 	}
 }
