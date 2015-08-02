@@ -40,6 +40,7 @@ public class MinCamlTransducer {
 			if(type != null) {
 				return type;
 			}
+			mincaml = mincaml.parent;
 		}
 		System.out.println("Type Error: Type '" + name + "' is not found");
 		return MinCamlType.DefualtType;
@@ -53,13 +54,18 @@ public class MinCamlTransducer {
 		this.typeRuleMap.put(rule.getName(), rule);
 	}
 
+	public MinCamlTypeRule getTypeRule(String name) {
+		return this.typeRuleMap.get(name);
+	}
+
 	public final void setName(String name, MinCamlTree node) {
 		MinCamlTransducer mincaml = this;
 		while(mincaml != null) {
-			if(this.nameMap.containsKey(name)) {
+			if(mincaml.nameMap.containsKey(name)) {
 				System.out.println("Name Error: Name '" + name + "' is re-defined ");
 				return;
 			}
+			mincaml = mincaml.parent;
 		}
 		this.nameMap.put(name, node);
 	}
@@ -71,6 +77,7 @@ public class MinCamlTransducer {
 			if(tree != null) {
 				return tree;
 			}
+			mincaml = mincaml.parent;
 		}
 		System.out.println("Name Error: Name '" + name + "' is not found");
 		return null;
@@ -80,10 +87,11 @@ public class MinCamlTransducer {
 		String rule = node.getRuleName();
 		MinCamlTransducer mincaml = this;
 		while(mincaml != null) {
-			node.matched = this.typeRuleMap.get(rule);
+			node.matched = mincaml.typeRuleMap.get(rule);
 			if(node.matched != null) {
 				return node.matched.match(this, node);
 			}
+			mincaml = mincaml.parent;
 		}
 		System.out.println("undifined rule: '" + rule + "'\n" + node);
 		return null;

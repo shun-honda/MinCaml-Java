@@ -43,11 +43,11 @@ class MinCamlPrimitiveType extends MinCamlType {
 	}
 
 	boolean equalsType(MinCamlType exprType) {
-		return false;
+		return this == exprType;
 	}
 
 	boolean matchType(MinCamlType exprType) {
-		return false;
+		return this == exprType;
 	}
 }
 

@@ -11,7 +11,6 @@ public class MinCamlLanguage {
 		this.defineLiteral(mincaml, "#False", "bool");
 		this.defineLiteral(mincaml, "#Integer", "int");
 		this.defineLiteral(mincaml, "#Float", "float");
-		// this.defineLiteral(mincaml, "#String", "string");
 
 		this.defineBinary(mincaml, "#Add", "int", "int", "int", "+");
 		this.defineBinary(mincaml, "#Sub", "int", "int", "int", "-");
@@ -21,6 +20,12 @@ public class MinCamlLanguage {
 		this.defineBinary(mincaml, "#FSub", "float", "float", "float", "-.");
 		this.defineBinary(mincaml, "#FMul", "float", "float", "float", "*.");
 		this.defineBinary(mincaml, "#FDiv", "float", "float", "float", "/.");
+		this.defineComp(mincaml, "#Equals", "bool", "=");
+		this.defineComp(mincaml, "#LessThan", "bool", "<");
+		this.defineComp(mincaml, "#MoreThan", "bool", ">");
+		this.defineComp(mincaml, "#LessThanEquals", "bool", "<=");
+		this.defineComp(mincaml, "#MoreThanEquals", "bool", ">=");
+		this.defineComp(mincaml, "#NotEquals", "bool", "<>");
 	}
 
 	private String key(String tagname) {
@@ -39,6 +44,12 @@ public class MinCamlLanguage {
 		MinCamlType t2 = mincaml.getType(type2);
 		MinCamlType[] types = { rt, t1, t2 };
 		mincaml.setTypeRule(new Operator(tname, types, op));
+	}
+
+	private void defineComp(MinCamlTransducer mincaml, String tname, String rtype, String op) {
+		MinCamlType rt = mincaml.getType(rtype);
+		MinCamlType[] types = { rt };
+		mincaml.setTypeRule(new CompOperator(tname, types, op));
 	}
 
 }
@@ -152,4 +163,22 @@ class Operator extends MinCamlTypeRule {
 		}
 		return node.setType(this.types[0]);
 	}
+}
+
+class CompOperator extends Operator {
+
+	public CompOperator(String name, MinCamlType[] types, String op) {
+		super(name, types, op);
+	}
+
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlType nodeType1 = mincaml.typeCheck(node.get(0));
+		MinCamlType nodeType2 = mincaml.typeCheck(node.get(1));
+		if(!nodeType1.equals(nodeType2)) {
+			System.out.println("Type Error: second expression has " + nodeType2
+					+ " type, but second expression was expected " + nodeType1 + node + "\n");
+		}
+		return node.setType(this.types[0]);
+	}
+
 }
