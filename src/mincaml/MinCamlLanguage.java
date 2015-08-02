@@ -3,6 +3,7 @@ package mincaml;
 import java.util.ArrayList;
 import java.util.List;
 
+import jvm.CodeGenerator;
 import nez.ast.Tag;
 
 public class MinCamlLanguage {
@@ -100,6 +101,11 @@ class TopLevel extends MinCamlTypeRule {
 		}
 		return node.setType(type);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateTopLevel(node);
+	}
 }
 
 class VarDecl extends MinCamlTypeRule {
@@ -119,6 +125,11 @@ class VarDecl extends MinCamlTypeRule {
 		MinCamlType retType = mincaml.typeCheck(node.get(2));
 		return node.setType(retType);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateVarDecl(node);
+	}
 }
 
 class Variable extends MinCamlTypeRule {
@@ -130,6 +141,11 @@ class Variable extends MinCamlTypeRule {
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree var = mincaml.getName(node);
 		return node.setType(var.typed);
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateVariable(node);
 	}
 }
 
@@ -147,6 +163,7 @@ class FunctionDecl extends MinCamlTypeRule {
 		mincaml.setName(name, node);
 		mincaml = new MinCamlTransducer(mincaml);
 		MinCamlTree argsNode = node.get(1);
+		argsNode.matched = new Arguments(name, argsNode.size());
 		for(MinCamlTree arg : argsNode) {
 			mincaml.setName(arg.getText(), arg);
 		}
@@ -170,6 +187,11 @@ class FunctionDecl extends MinCamlTypeRule {
 		MinCamlType retType = mincaml.typeCheck(node.get(3));
 		return node.setType(retType);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateFunctionDecl(node);
+	}
 }
 
 class FunctionCall extends MinCamlTypeRule {
@@ -186,6 +208,7 @@ class FunctionCall extends MinCamlTypeRule {
 		nameNode.setType(funcType);
 		MinCamlTree fArgs = func.get(1);
 		MinCamlTree aArgs = node.get(1);
+		aArgs.matched = new Arguments(name, aArgs.size());
 		if(fArgs.size() != aArgs.size()) {
 			System.out.println("Argument Error: size of function '" + name + "' arguments is not match");
 		}
@@ -209,6 +232,23 @@ class FunctionCall extends MinCamlTypeRule {
 		}
 		return node.setType(funcType.retType);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateFunctionCall(node);
+	}
+}
+
+class Arguments extends MinCamlTypeRule {
+
+	public Arguments(String name, int size) {
+		super(name, size);
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateArguments(node);
+	}
 }
 
 class Literal extends MinCamlTypeRule {
@@ -222,6 +262,11 @@ class Literal extends MinCamlTypeRule {
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		node.setType(this.type);
 		return this.type;
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateLiteral(node);
 	}
 }
 
@@ -258,6 +303,11 @@ class Operator extends MinCamlTypeRule {
 		}
 		return node.setType(this.types[0]);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateOperator(node);
+	}
 }
 
 class CompOperator extends Operator {
@@ -288,6 +338,11 @@ class CompOperator extends Operator {
 		return node.setType(this.types[0]);
 	}
 
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateCompOperator(node);
+	}
+
 }
 
 class IfExpression extends MinCamlTypeRule {
@@ -309,5 +364,10 @@ class IfExpression extends MinCamlTypeRule {
 					+ " type, but else expression was expected " + nodeType2 + node + "\n");
 		}
 		return node.setType(nodeType2);
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateIfExpression(node);
 	}
 }

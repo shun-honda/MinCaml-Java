@@ -1,5 +1,7 @@
 package mincaml;
 
+import jvm.CodeGenerator;
+
 public abstract class MinCamlTypeRule {
 	String name;
 	int size;
@@ -23,5 +25,7 @@ public abstract class MinCamlTypeRule {
 		node.typed = MinCamlType.DefualtType;
 		return node.typed;
 	}
+
+	public abstract void generate(MinCamlTree node, CodeGenerator generator);
 
 }

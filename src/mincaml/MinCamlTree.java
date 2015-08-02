@@ -1,5 +1,6 @@
 package mincaml;
 
+import jvm.CodeGenerator;
 import nez.ast.AbstractTree;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
@@ -58,6 +59,10 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 
 	public final MinCamlType getType(MinCaml type) {
 		return this.typed;
+	}
+
+	public void generate(CodeGenerator generator) {
+		this.matched.generate(this, generator);
 	}
 
 }
