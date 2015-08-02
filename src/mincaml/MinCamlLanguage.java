@@ -6,6 +6,7 @@ public class MinCamlLanguage {
 		mincaml.setTypeRule(new TopLevel(key("Source")));
 		mincaml.setTypeRule(new VarDecl(key("VarDecl")));
 		mincaml.setTypeRule(new Variable(key("Name")));
+		mincaml.setTypeRule(new IfExpression(key("If")));
 
 		this.defineLiteral(mincaml, "#True", "bool");
 		this.defineLiteral(mincaml, "#False", "bool");
@@ -77,9 +78,12 @@ class VarDecl extends MinCamlTypeRule {
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree nameNode = node.get(0);
+		String name = nameNode.getText();
+		mincaml = new MinCamlTransducer(mincaml);
 		MinCamlType type = mincaml.typeCheck(node.get(1));
+		mincaml = mincaml.parent;
 		nameNode.setType(type);
-		mincaml.setType(nameNode.getText(), type);
+		mincaml.setName(name, nameNode);
 		MinCamlType retType = mincaml.typeCheck(node.get(2));
 		return node.setType(retType);
 	}
@@ -92,8 +96,8 @@ class Variable extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		MinCamlType type = mincaml.getType(node);
-		return node.setType(type);
+		MinCamlTree var = mincaml.getName(node);
+		return node.setType(var.typed);
 	}
 }
 
@@ -181,4 +185,26 @@ class CompOperator extends Operator {
 		return node.setType(this.types[0]);
 	}
 
+}
+
+class IfExpression extends MinCamlTypeRule {
+
+	public IfExpression(String name) {
+		super(name, 3);
+	}
+
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlType nodeType1 = mincaml.typeCheck(node.get(0));
+		if(nodeType1 != mincaml.getType("bool")) {
+			System.out.println("Type Error: The first expr of If is " + nodeType1
+					+ " type, but it is exprected of bool type" + node + "\n");
+		}
+		MinCamlType nodeType2 = mincaml.typeCheck(node.get(1));
+		MinCamlType nodeType3 = mincaml.typeCheck(node.get(2));
+		if(!nodeType2.equals(nodeType3)) {
+			System.out.println("Type Error: else expression has " + nodeType3
+					+ " type, but else expression was expected " + nodeType2 + node + "\n");
+		}
+		return node.setType(nodeType2);
+	}
 }

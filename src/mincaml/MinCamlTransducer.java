@@ -70,7 +70,8 @@ public class MinCamlTransducer {
 		this.nameMap.put(name, node);
 	}
 
-	public final MinCamlTree getName(String name) {
+	public final MinCamlTree getName(MinCamlTree nameNode) {
+		String name = nameNode.getText();
 		MinCamlTransducer mincaml = this;
 		while(mincaml != null) {
 			MinCamlTree tree = mincaml.nameMap.get(name);
@@ -79,7 +80,8 @@ public class MinCamlTransducer {
 			}
 			mincaml = mincaml.parent;
 		}
-		System.out.println("Name Error: Name '" + name + "' is not found");
+		System.out.println("Name Error: Name '" + name + "' is not found (pos=" + nameNode.getSourcePosition() + ")");
+		System.exit(1);
 		return null;
 	}
 
