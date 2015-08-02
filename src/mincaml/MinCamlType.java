@@ -28,7 +28,7 @@ public abstract class MinCamlType {
 		return this.getName();
 	}
 
-	public final static MinCamlType DefualtType = new MinCamlPrimitiveType("int");
+	public final static MinCamlType DefualtType = new MinCamlPrimitiveType("int", int.class);
 
 	public static MinCamlType newErrorType(MinCamlTree node, String msg) {
 		return new MinCamlErrorType(node, msg);
@@ -36,8 +36,11 @@ public abstract class MinCamlType {
 }
 
 class MinCamlPrimitiveType extends MinCamlType {
-	public MinCamlPrimitiveType(String name) {
+	Class<?> c;
+
+	public MinCamlPrimitiveType(String name, Class<?> c) {
 		super(name);
+		this.c = c;
 	}
 
 	@Override

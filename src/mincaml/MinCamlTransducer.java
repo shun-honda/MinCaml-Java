@@ -16,10 +16,10 @@ public class MinCamlTransducer {
 		this.typeMap = new HashMap<String, MinCamlType>();
 		this.typeRuleMap = new HashMap<String, MinCamlTypeRule>();
 		this.nameMap = new HashMap<String, MinCamlTree>();
-		this.setType("int", new MinCamlPrimitiveType("int"));
-		this.setType("float", new MinCamlPrimitiveType("float"));
-		this.setType("bool", new MinCamlPrimitiveType("bool"));
-		this.setType("unit", new MinCamlPrimitiveType("unit"));
+		this.setType("int", MinCamlType.DefualtType);
+		this.setType("float", new MinCamlPrimitiveType("float", double.class));
+		this.setType("bool", new MinCamlPrimitiveType("bool", boolean.class));
+		this.setType("unit", new MinCamlPrimitiveType("unit", Void.class));
 		new MinCamlLanguage(this);
 	}
 
