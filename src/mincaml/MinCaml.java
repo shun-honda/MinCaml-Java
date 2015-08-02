@@ -25,7 +25,12 @@ public class MinCaml {
 		displayVersion();
 		grammar = newMinCamlGrammar();
 		treeTransducer = new MinCamlTreeTransducer();
-		shell();
+		if(args.length == 0) {
+			shell();
+		} else {
+			MinCamlTransducer mincaml = new MinCamlTransducer();
+			parse(mincaml, args[0]);
+		}
 	}
 
 	public final static void displayVersion() {
@@ -45,6 +50,27 @@ public class MinCaml {
 			}
 		}
 		return mincamlGrammar.newGrammar("File");
+	}
+
+	public final static MinCamlTree parse(MinCamlTransducer mincaml, String path) {
+		SourceContext source = loadFile(path);
+		MinCamlTree node = (MinCamlTree) grammar.parse(source, treeTransducer);
+		if(node == null) {
+			ConsoleUtils.println(source.getSyntaxErrorMessage());
+		}
+		System.out.println("parsed:\n" + node + "\n");
+		mincaml.eval(node);
+		return node;
+	}
+
+	private static SourceContext loadFile(String path) {
+		try {
+			SourceContext source = SourceContext.newFileContext(path);
+			return source;
+		} catch (IOException e) {
+			ConsoleUtils.exit(1, "cannot open: " + path);
+		}
+		return null;
 	}
 
 	public final static MinCamlTree parse(MinCamlTransducer mincaml, String urn, int linenum, String text) {
