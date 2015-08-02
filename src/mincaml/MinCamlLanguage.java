@@ -5,6 +5,8 @@ public class MinCamlLanguage {
 	public MinCamlLanguage(MinCamlTransducer mincaml) {
 		mincaml.setTypeRule(new TopLevel(key("Source")));
 		mincaml.setTypeRule(new VarDecl(key("VarDecl")));
+		mincaml.setTypeRule(new FunctionDecl(key("FunctionDecl")));
+		mincaml.setTypeRule(new FunctionCall(key("FunctionCall")));
 		mincaml.setTypeRule(new Variable(key("Name")));
 		mincaml.setTypeRule(new IfExpression(key("If")));
 
@@ -103,31 +105,57 @@ class Variable extends MinCamlTypeRule {
 
 class FunctionDecl extends MinCamlTypeRule {
 
-	public FunctionDecl(String name, int size) {
-		super(name, size);
+	public FunctionDecl(String name) {
+		super(name, 3);
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
+		MinCamlTree nameNode = node.get(0);
+		String name = nameNode.getText();
+		mincaml = new MinCamlTransducer(mincaml);
+		MinCamlTree argsNode = node.get(1);
+		for(MinCamlTree arg : argsNode) {
+			mincaml.setName(arg.getText(), arg);
 		}
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		MinCamlType type = mincaml.typeCheck(node.get(2));
+		for(MinCamlTree arg : argsNode) {
+			arg.typed = mincaml.getName(arg).typed;
+		}
+		mincaml = mincaml.parent;
+		nameNode.setType(type);
+		mincaml.setName(name, node);
+		MinCamlType retType = mincaml.typeCheck(node.get(3));
+		return node.setType(retType);
 	}
 }
 
 class FunctionCall extends MinCamlTypeRule {
 
-	public FunctionCall(String name, int size) {
-		super(name, size);
+	public FunctionCall(String name) {
+		super(name, 1);
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		for(MinCamlTree sub : node) {
-			mincaml.typeCheck(sub);
+		String name = node.get(0).getText();
+		MinCamlTree func = mincaml.getName(node.get(0));
+		MinCamlTree fArgs = func.get(1);
+		MinCamlTree aArgs = node.get(1);
+		if(fArgs.size() != aArgs.size()) {
+			System.out.println("Argument Error: size of function '" + name + "' arguments is not match");
 		}
-		node.setType(MinCamlType.DefualtType);
-		return MinCamlType.DefualtType;
+		for(int i = 0; i < aArgs.size(); i++) {
+			MinCamlType fArgType = fArgs.get(i).typed;
+			MinCamlType aArgType = mincaml.typeCheck(aArgs.get(i));
+			if(fArgType == null) {
+				fArgType = aArgType;
+			} else {
+				if(!fArgType.equals(aArgType)) {
+					System.out.println("Type Error: Argument" + i + 1 + " of function '" + name + "' is " + fArgType
+							+ " type, but " + aArgType + " type found" + aArgs + "\n");
+				}
+			}
+		}
+		return func.get(0).typed;
 	}
 }
 
@@ -160,9 +188,16 @@ class Operator extends MinCamlTypeRule {
 			MinCamlTree sub = node.get(i);
 			MinCamlType nodeType = mincaml.typeCheck(sub);
 			MinCamlType argType = types[i + 1];
-			if(!nodeType.equals(argType)) {
-				System.out.println("Type Error: Argument" + i + 1 + " of operator '" + this.op + "' is " + argType
-						+ " type, but " + nodeType + " type found" + sub + "\n");
+			if(nodeType == null) {
+				if(sub.matched instanceof Variable) {
+					sub.setType(argType);
+					mincaml.getName(sub).setType(argType);
+				}
+			} else {
+				if(!nodeType.equals(argType)) {
+					System.out.println("Type Error: Argument" + i + 1 + " of operator '" + this.op + "' is " + argType
+							+ " type, but " + nodeType + " type found" + sub + "\n");
+				}
 			}
 		}
 		return node.setType(this.types[0]);
