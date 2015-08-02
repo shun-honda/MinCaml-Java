@@ -1,5 +1,7 @@
 package mincaml;
 
+import nez.ast.Tag;
+
 public class MinCamlLanguage {
 
 	public MinCamlLanguage(MinCamlTransducer mincaml) {
@@ -29,6 +31,10 @@ public class MinCamlLanguage {
 		this.defineComp(mincaml, "#LessThanEquals", "bool", "<=");
 		this.defineComp(mincaml, "#MoreThanEquals", "bool", ">=");
 		this.defineComp(mincaml, "#NotEquals", "bool", "<>");
+
+		this.defineStandardLibrary(mincaml, "print_int", "unit", "int");
+		this.defineStandardLibrary(mincaml, "print_float", "unit", "float");
+
 	}
 
 	private String key(String tagname) {
@@ -53,6 +59,22 @@ public class MinCamlLanguage {
 		MinCamlType rt = mincaml.getType(rtype);
 		MinCamlType[] types = { rt };
 		mincaml.setTypeRule(new CompOperator(tname, types, op));
+	}
+
+	private void defineStandardLibrary(MinCamlTransducer mincaml, String funcName, String rtype, String... args) {
+		MinCamlTree func = new MinCamlTree(Tag.tag(key("FunctionDecl")), null, 0, 0, 2, null);
+		MinCamlTree name = new MinCamlTree(Tag.tag(key("Name")), null, 0, 0, 0, funcName);
+		MinCamlTree argList = new MinCamlTree(Tag.tag(key("FormalArgList")), null, 0, 0, args.length, null);
+		for(int i = 0; i < args.length; i++) {
+			MinCamlTree arg = new MinCamlTree(Tag.tag(key("Name")), null, 0, 0, 0, "arg" + i);
+			arg.setType(mincaml.getType(args[i]));
+			argList.set(i, arg);
+		}
+		name.setType(mincaml.getType(rtype));
+		func.set(0, name);
+		func.set(1, argList);
+		mincaml.setTypeRule(new FunctionDecl(funcName));
+		mincaml.setName(funcName, func);
 	}
 
 }
@@ -112,6 +134,7 @@ class FunctionDecl extends MinCamlTypeRule {
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree nameNode = node.get(0);
 		String name = nameNode.getText();
+		mincaml.setName(name, node);
 		mincaml = new MinCamlTransducer(mincaml);
 		MinCamlTree argsNode = node.get(1);
 		for(MinCamlTree arg : argsNode) {
@@ -123,7 +146,6 @@ class FunctionDecl extends MinCamlTypeRule {
 		}
 		mincaml = mincaml.parent;
 		nameNode.setType(type);
-		mincaml.setName(name, node);
 		MinCamlType retType = mincaml.typeCheck(node.get(3));
 		return node.setType(retType);
 	}
@@ -155,7 +177,7 @@ class FunctionCall extends MinCamlTypeRule {
 				}
 			}
 		}
-		return func.get(0).typed;
+		return node.setType(func.get(0).typed);
 	}
 }
 
@@ -211,9 +233,21 @@ class CompOperator extends Operator {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		MinCamlType nodeType1 = mincaml.typeCheck(node.get(0));
-		MinCamlType nodeType2 = mincaml.typeCheck(node.get(1));
-		if(!nodeType1.equals(nodeType2)) {
+		MinCamlTree node1 = node.get(0);
+		MinCamlType nodeType1 = mincaml.typeCheck(node1);
+		MinCamlTree node2 = node.get(1);
+		MinCamlType nodeType2 = mincaml.typeCheck(node2);
+		if(nodeType1 == null && nodeType2 == null) {
+			return node.setType(this.types[0]);
+		} else if(nodeType1 == null) {
+			nodeType1 = nodeType2;
+			node1.setType(nodeType1);
+			mincaml.getName(node1).setType(nodeType1);
+		} else if(nodeType2 == null) {
+			nodeType2 = nodeType1;
+			node2.setType(nodeType2);
+			mincaml.getName(node2).setType(nodeType2);
+		} else if(!nodeType1.equals(nodeType2)) {
 			System.out.println("Type Error: second expression has " + nodeType2
 					+ " type, but second expression was expected " + nodeType1 + node + "\n");
 		}
