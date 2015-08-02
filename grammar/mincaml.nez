@@ -41,14 +41,14 @@ Expression
     / EqualityExpression
 
 CompoundExpression
-    = IfStatement
+    = IfExpression
     / RecursiveFunctionDeclaration
     / VariableDeclaration
     / LetTupleExpression
     / ArrayCreateExpression
 
-IfStatement
-   = { "if" _ @Expression _ @{"then" _ @Expression #Then } _ @{"else" _ @Expression #Else}  #If }
+IfExpression
+   = { "if" _ @Expression _ "then" _ @Expression _ "else" _ @Expression  #If }
 
 RecursiveFunctionDeclaration
     = { "let" _ "rec" _ @Identifier _ @FormalArgList _ '=' _ @Expression _ "in" _ @Expression #FunctionDeclaration }
