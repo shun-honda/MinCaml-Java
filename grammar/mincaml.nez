@@ -51,7 +51,7 @@ IfExpression
    = { "if" _ @Expression _ "then" _ @Expression _ "else" _ @Expression  #If }
 
 RecursiveFunctionDeclaration
-    = { "let" _ "rec" _ @Identifier _ @FormalArgList _ '=' _ @Expression _ "in" _ @Expression #FunctionDeclaration }
+    = { "let" _ "rec" _ @Identifier _ @FormalArgList _ '=' _ @Expression _ "in" _ @Expression #FunctionDecl }
 
 FormalArgList
     = { @Identifier (_ @Identifier)* #FormalArgList }
