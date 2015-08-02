@@ -1,5 +1,8 @@
 package mincaml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import nez.ast.Tag;
 
 public class MinCamlLanguage {
@@ -65,12 +68,17 @@ public class MinCamlLanguage {
 		MinCamlTree func = new MinCamlTree(Tag.tag(key("FunctionDecl")), null, 0, 0, 2, null);
 		MinCamlTree name = new MinCamlTree(Tag.tag(key("Name")), null, 0, 0, 0, funcName);
 		MinCamlTree argList = new MinCamlTree(Tag.tag(key("FormalArgList")), null, 0, 0, args.length, null);
+		List<MinCamlType> argTypeList = new ArrayList<MinCamlType>();
 		for(int i = 0; i < args.length; i++) {
 			MinCamlTree arg = new MinCamlTree(Tag.tag(key("Name")), null, 0, 0, 0, "arg" + i);
 			arg.setType(mincaml.getType(args[i]));
 			argList.set(i, arg);
+			argTypeList.add(arg.typed);
 		}
-		name.setType(mincaml.getType(rtype));
+		MinCamlFuncType funcType = new MinCamlFuncType(funcName);
+		funcType.setReturnType(mincaml.getType(rtype));
+		funcType.setArgsType(argTypeList);
+		name.setType(funcType);
 		func.set(0, name);
 		func.set(1, argList);
 		mincaml.setTypeRule(new FunctionDecl(funcName));
@@ -134,6 +142,8 @@ class FunctionDecl extends MinCamlTypeRule {
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree nameNode = node.get(0);
 		String name = nameNode.getText();
+		MinCamlFuncType funcType = new MinCamlFuncType(name);
+		nameNode.setType(funcType);
 		mincaml.setName(name, node);
 		mincaml = new MinCamlTransducer(mincaml);
 		MinCamlTree argsNode = node.get(1);
@@ -141,11 +151,22 @@ class FunctionDecl extends MinCamlTypeRule {
 			mincaml.setName(arg.getText(), arg);
 		}
 		MinCamlType type = mincaml.typeCheck(node.get(2));
+		List<MinCamlType> types = new ArrayList<MinCamlType>();
 		for(MinCamlTree arg : argsNode) {
 			arg.typed = mincaml.getName(arg).typed;
+			types.add(arg.typed);
 		}
+		MinCamlReturnType funcRetType = funcType.getReturnType();
+		if(funcRetType.isNull()) {
+			if(type != funcRetType.type) {
+				System.out.println("Type Error: function return type is expected " + type + " type, but " + funcRetType
+						+ " type is found" + node + "\n");
+			}
+		} else {
+			funcType.setReturnType(type);
+		}
+		funcType.setArgsType(types);
 		mincaml = mincaml.parent;
-		nameNode.setType(type);
 		MinCamlType retType = mincaml.typeCheck(node.get(3));
 		return node.setType(retType);
 	}
@@ -158,8 +179,11 @@ class FunctionCall extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		String name = node.get(0).getText();
-		MinCamlTree func = mincaml.getName(node.get(0));
+		MinCamlTree nameNode = node.get(0);
+		String name = nameNode.getText();
+		MinCamlTree func = mincaml.getName(nameNode);
+		MinCamlFuncType funcType = (MinCamlFuncType) func.get(0).typed;
+		nameNode.setType(funcType);
 		MinCamlTree fArgs = func.get(1);
 		MinCamlTree aArgs = node.get(1);
 		if(fArgs.size() != aArgs.size()) {
@@ -169,7 +193,13 @@ class FunctionCall extends MinCamlTypeRule {
 			MinCamlType fArgType = fArgs.get(i).typed;
 			MinCamlType aArgType = mincaml.typeCheck(aArgs.get(i));
 			if(fArgType == null) {
-				fArgType = aArgType;
+				fArgs.get(i).setType(aArgType);
+				funcType.setArgType(i, aArgType);
+			} else if(aArgType instanceof MinCamlReturnType) {
+				if(!fArgType.equals(((MinCamlReturnType) aArgType).type)) {
+					System.out.println("Type Error: Argument" + i + 1 + " of function '" + name + "' is " + fArgType
+							+ " type, but " + aArgType + " type found" + aArgs + "\n");
+				}
 			} else {
 				if(!fArgType.equals(aArgType)) {
 					System.out.println("Type Error: Argument" + i + 1 + " of function '" + name + "' is " + fArgType
@@ -177,7 +207,7 @@ class FunctionCall extends MinCamlTypeRule {
 				}
 			}
 		}
-		return node.setType(func.get(0).typed);
+		return node.setType(funcType.retType);
 	}
 }
 
@@ -215,6 +245,10 @@ class Operator extends MinCamlTypeRule {
 					sub.setType(argType);
 					mincaml.getName(sub).setType(argType);
 				}
+			} else if(nodeType instanceof MinCamlReturnType) {
+				sub.setType(argType);
+				MinCamlFuncType funcType = (MinCamlFuncType) sub.get(0).typed;
+				funcType.setReturnType(argType);
 			} else {
 				if(!nodeType.equals(argType)) {
 					System.out.println("Type Error: Argument" + i + 1 + " of operator '" + this.op + "' is " + argType

@@ -1,5 +1,8 @@
 package mincaml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class MinCamlType {
 	String name;
 
@@ -73,4 +76,86 @@ class MinCamlErrorType extends MinCamlType {
 	boolean matchType(MinCamlType exprType) {
 		return true;
 	}
+}
+
+class MinCamlFuncType extends MinCamlType {
+	MinCamlReturnType retType = new MinCamlReturnType(this.name);
+	List<MinCamlType> argTypeList;
+
+	public MinCamlFuncType(String name) {
+		super(name);
+	}
+
+	public void setReturnType(MinCamlType type) {
+		this.retType.setType(type);
+	}
+
+	public MinCamlReturnType getReturnType() {
+		return this.retType;
+	}
+
+	public void setArgsType(List<MinCamlType> types) {
+		this.argTypeList = new ArrayList<MinCamlType>();
+		this.argTypeList = types;
+	}
+
+	public void setArgType(int index, MinCamlType type) {
+		this.argTypeList.remove(index);
+		this.argTypeList.add(index, type);
+	}
+
+	@Override
+	boolean equalsType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean matchType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean isGreekType() {
+		return false;
+	}
+}
+
+class MinCamlReturnType extends MinCamlType {
+	MinCamlType type;
+
+	public MinCamlReturnType(String name) {
+		super("ret:" + name);
+	}
+
+	public void setType(MinCamlType type) {
+		this.type = type;
+	}
+
+	@Override
+	boolean equalsType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean matchType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean isGreekType() {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		if(this.type != null) {
+			return this.type.toString();
+		}
+		return this.getName();
+	}
+
+	public boolean isNull() {
+		return this.type == null;
+	}
+
 }
