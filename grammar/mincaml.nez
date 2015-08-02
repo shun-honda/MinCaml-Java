@@ -89,7 +89,8 @@ public UnaryExpression
     = FunctionCall / { addUnaryOperator _ @UnaryExpression }
 
 inline addRelationalOperator
-    = '<' ('=' #LessThanEquals / #LessThan)
+    = '<>' #NotEquals
+    / '<' ('=' #LessThanEquals / #LessThan)
     / '>' ('=' #GreaterThanEquals / #GreaterThan)
 
 FunctionCall
