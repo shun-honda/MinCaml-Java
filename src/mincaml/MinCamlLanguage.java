@@ -176,7 +176,7 @@ class FunctionDecl extends MinCamlTypeRule {
 			types.add(arg.typed);
 		}
 		MinCamlReturnType funcRetType = funcType.getReturnType();
-		if(funcRetType.isNull()) {
+		if(!funcRetType.isNull()) {
 			if(type != funcRetType.type) {
 				System.out.println("Type Error: function return type is expected " + type + " type, but " + funcRetType
 						+ " type is found" + node + "\n");
