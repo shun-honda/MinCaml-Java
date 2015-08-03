@@ -1,9 +1,11 @@
 package mincaml;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import jvm.CodeGenerator;
+import jvm.JavaOperatorApi;
 import nez.ast.Tag;
 
 public class MinCamlLanguage {
@@ -273,6 +275,7 @@ class Literal extends MinCamlTypeRule {
 class Operator extends MinCamlTypeRule {
 	MinCamlType[] types;
 	String op;
+	Method method;
 
 	public Operator(String name, MinCamlType[] types, String op) {
 		super(name, types.length - 1);
@@ -281,6 +284,7 @@ class Operator extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		this.setMethod(node);
 		for(int i = 0; i < node.size(); i++) {
 			MinCamlTree sub = node.get(i);
 			MinCamlType nodeType = mincaml.typeCheck(sub);
@@ -302,6 +306,19 @@ class Operator extends MinCamlTypeRule {
 			}
 		}
 		return node.setType(this.types[0]);
+	}
+
+	public void setMethod(MinCamlTree node) {
+		try {
+			this.method = JavaOperatorApi.class.getMethod(node.getTagName(), this.types[1].getJavaClass(),
+					this.types[2].getJavaClass());
+		} catch (NoSuchMethodException | SecurityException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Method getMethod() {
+		return this.method;
 	}
 
 	@Override

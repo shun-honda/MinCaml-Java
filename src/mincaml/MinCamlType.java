@@ -33,6 +33,10 @@ public abstract class MinCamlType {
 	public static MinCamlType newErrorType(MinCamlTree node, String msg) {
 		return new MinCamlErrorType(node, msg);
 	}
+
+	public Class<?> getJavaClass() {
+		return this.getClass();
+	}
 }
 
 class MinCamlPrimitiveType extends MinCamlType {
@@ -54,6 +58,11 @@ class MinCamlPrimitiveType extends MinCamlType {
 
 	boolean matchType(MinCamlType exprType) {
 		return this == exprType;
+	}
+
+	@Override
+	public Class<?> getJavaClass() {
+		return c;
 	}
 }
 

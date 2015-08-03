@@ -52,6 +52,10 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 		return keyTag(this.getTag());
 	}
 
+	public final String getTagName() {
+		return this.getTag().getName();
+	}
+
 	public final MinCamlType setType(MinCamlType type) {
 		this.typed = type;
 		return type;
