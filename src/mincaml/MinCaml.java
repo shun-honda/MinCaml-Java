@@ -30,9 +30,12 @@ public class MinCaml {
 		if(args.length == 0) {
 			shell();
 		} else {
+			long start = System.currentTimeMillis();
 			MinCamlTransducer mincaml = new MinCamlTransducer();
 			MinCamlTree node = parse(mincaml, args[0]);
 			execute(mincaml, node);
+			long end = System.currentTimeMillis();
+			System.out.println((end - start) + "ms");
 		}
 	}
 

@@ -166,6 +166,14 @@ class MinCamlReturnType extends MinCamlType {
 	}
 
 	@Override
+	public Class<?> getJavaClass() {
+		if(this.type == null) {
+			return this.getClass();
+		}
+		return this.type.getJavaClass();
+	}
+
+	@Override
 	public String toString() {
 		if(this.type != null) {
 			return this.type.toString();

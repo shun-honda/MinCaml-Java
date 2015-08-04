@@ -2,10 +2,12 @@ package mincaml;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.Method;
 
 import jvm.ClassBuilder;
 import jvm.ClassBuilder.MethodBuilder;
@@ -14,6 +16,7 @@ import jvm.CodeGenerator;
 import jvm.InvocationTarget;
 import jvm.JavaOperatorApi;
 import jvm.JavaStaticField;
+import jvm.Methods;
 import jvm.UserDefinedClassLoader;
 
 public class JVMByteCodeGenerator extends CodeGenerator {
@@ -26,6 +29,7 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 	private ClassBuilder cBuilder;
 	private UserDefinedClassLoader cLoader;
 	private MethodBuilder mBuilder;
+	private Stack<MethodBuilder> mBuilderStack = new Stack<MethodBuilder>();
 
 	class MinCamlScope {
 		MinCamlScope prev;
@@ -106,14 +110,36 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	@Override
 	public void generateFunctionDecl(MinCamlTree node) {
-		// TODO Auto-generated method stub
+		this.mBuilderStack.push(this.mBuilder);
+		MinCamlTree nameNode = node.get(0);
+		MinCamlTree args = node.get(1);
+		String name = nameNode.getText();
+		MinCamlFuncType funcType = (MinCamlFuncType) nameNode.typed;
+		Class<?>[] paramClasses = new Class<?>[funcType.argTypeList.size()];
+		for(int i = 0; i < paramClasses.length; i++) {
+			paramClasses[i] = funcType.argTypeList.get(i).getJavaClass();
 
+		}
+		this.mBuilder = this.cBuilder.newMethodBuilder(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC,
+				funcType.retType.getJavaClass(), name, paramClasses);
+		this.mBuilder.enterScope();
+		this.pushScope();
+		for(MinCamlTree arg : args) {
+			this.scope.setLocalVar(arg.getText(), this.mBuilder.defineArgument(arg.typed.getJavaClass()));
+		}
+		node.get(2).generate(this);
+		this.mBuilder.exitScope();
+		this.popScope();
+		this.mBuilder.returnValue();
+		this.mBuilder.endMethod();
+		this.mBuilder = this.mBuilderStack.pop();
+		node.get(3).generate(this);
 	}
 
 	@Override
 	public void generateFunctionCall(MinCamlTree node) {
-		FunctionCall func = (FunctionCall) node.matched;
-		if(func.standard) {
+		MinCamlFuncType funcType = (MinCamlFuncType) node.get(0).typed;
+		if(funcType.standard) {
 			String name = node.get(0).getText();
 			JavaStaticField field = MinCamlStandardApi.getInstance(name);
 			this.mBuilder.getStatic(field);
@@ -121,7 +147,14 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 			InvocationTarget target = MinCamlStandardApi.get(name);
 			this.mBuilder.callInvocationTarget(target);
 		} else {
-
+			MinCamlTree args = node.get(1);
+			Class<?>[] paramClasses = new Class<?>[args.size()];
+			for(int i = 0; i < args.size(); i++) {
+				args.get(i).generate(this);
+				paramClasses[i] = args.get(i).typed.getJavaClass();
+			}
+			Method method = Methods.method(node.typed.getJavaClass(), node.get(0).getText(), paramClasses);
+			this.mBuilder.invokeStatic(this.cBuilder.getTypeDesc(), method);
 		}
 	}
 
