@@ -91,11 +91,18 @@ class MinCamlErrorType extends MinCamlType {
 }
 
 class MinCamlFuncType extends MinCamlType {
+	boolean standard;
 	MinCamlReturnType retType = new MinCamlReturnType(this.name);
 	List<MinCamlType> argTypeList;
 
 	public MinCamlFuncType(String name) {
 		super(name);
+		this.standard = false;
+	}
+
+	public MinCamlFuncType(String name, boolean standard) {
+		super(name);
+		this.standard = standard;
 	}
 
 	public void setReturnType(MinCamlType type) {

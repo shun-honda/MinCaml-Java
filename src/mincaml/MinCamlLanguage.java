@@ -1,11 +1,9 @@
 package mincaml;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import jvm.CodeGenerator;
-import jvm.JavaOperatorApi;
 import nez.ast.Tag;
 
 public class MinCamlLanguage {
@@ -78,13 +76,13 @@ public class MinCamlLanguage {
 			argList.set(i, arg);
 			argTypeList.add(arg.typed);
 		}
-		MinCamlFuncType funcType = new MinCamlFuncType(funcName);
+		MinCamlFuncType funcType = new MinCamlFuncType(funcName, true);
 		funcType.setReturnType(mincaml.getType(rtype));
 		funcType.setArgsType(argTypeList);
 		name.setType(funcType);
 		func.set(0, name);
 		func.set(1, argList);
-		mincaml.setTypeRule(new FunctionDecl(funcName));
+		mincaml.setTypeRule(new FunctionDecl(funcName, true));
 		mincaml.setName(funcName, func);
 	}
 
@@ -152,9 +150,16 @@ class Variable extends MinCamlTypeRule {
 }
 
 class FunctionDecl extends MinCamlTypeRule {
+	boolean standard;
 
 	public FunctionDecl(String name) {
 		super(name, 3);
+		this.standard = false;
+	}
+
+	public FunctionDecl(String name, boolean standard) {
+		super(name, 3);
+		this.standard = standard;
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
@@ -197,6 +202,7 @@ class FunctionDecl extends MinCamlTypeRule {
 }
 
 class FunctionCall extends MinCamlTypeRule {
+	boolean standard;
 
 	public FunctionCall(String name) {
 		super(name, 1);
@@ -207,6 +213,7 @@ class FunctionCall extends MinCamlTypeRule {
 		String name = nameNode.getText();
 		MinCamlTree func = mincaml.getName(nameNode);
 		MinCamlFuncType funcType = (MinCamlFuncType) func.get(0).typed;
+		this.standard = funcType.standard;
 		nameNode.setType(funcType);
 		MinCamlTree fArgs = func.get(1);
 		MinCamlTree aArgs = node.get(1);
@@ -275,7 +282,6 @@ class Literal extends MinCamlTypeRule {
 class Operator extends MinCamlTypeRule {
 	MinCamlType[] types;
 	String op;
-	Method method;
 
 	public Operator(String name, MinCamlType[] types, String op) {
 		super(name, types.length - 1);
@@ -284,7 +290,6 @@ class Operator extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		this.setMethod(node);
 		for(int i = 0; i < node.size(); i++) {
 			MinCamlTree sub = node.get(i);
 			MinCamlType nodeType = mincaml.typeCheck(sub);
@@ -306,19 +311,6 @@ class Operator extends MinCamlTypeRule {
 			}
 		}
 		return node.setType(this.types[0]);
-	}
-
-	public void setMethod(MinCamlTree node) {
-		try {
-			this.method = JavaOperatorApi.class.getMethod(node.getTagName(), this.types[1].getJavaClass(),
-					this.types[2].getJavaClass());
-		} catch (NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public Method getMethod() {
-		return this.method;
 	}
 
 	@Override

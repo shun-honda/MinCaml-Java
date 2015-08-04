@@ -380,6 +380,10 @@ public class ClassBuilder extends ClassWriter implements Opcodes {
 				break;
 			}
 		}
+
+		public void getStatic(JavaStaticField field) {
+			this.getStatic(field.getOwnerType(), field.getFieldName(), field.getFieldType());
+		}
 	}
 
 	public static class TryCatchLabel {

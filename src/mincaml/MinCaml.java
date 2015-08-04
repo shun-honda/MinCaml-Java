@@ -1,6 +1,8 @@
 package mincaml;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import nez.NezOption;
 import nez.SourceContext;
@@ -29,7 +31,8 @@ public class MinCaml {
 			shell();
 		} else {
 			MinCamlTransducer mincaml = new MinCamlTransducer();
-			parse(mincaml, args[0]);
+			MinCamlTree node = parse(mincaml, args[0]);
+			execute(mincaml, node, args[0]);
 		}
 	}
 
@@ -109,6 +112,22 @@ public class MinCaml {
 			ConsoleUtils.addHistory(console, line);
 			sb.append(line);
 			sb.append("\n");
+		}
+	}
+
+	public static void execute(MinCamlTransducer mincaml, MinCamlTree node, String name) {
+		JVMByteCodeGenerator generator = new JVMByteCodeGenerator(mincaml, "GeneratedClass");
+		node.generate(generator);
+		Class<?> mainClass = generator.generateClass();
+		try {
+			System.out.println("\n@@@@ Execute Byte Code @@@@");
+			Method method = mainClass.getMethod("main");
+			method.invoke(null);
+		} catch (NoSuchMethodException | SecurityException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			System.out.println("Invocation problem");
+			e.printStackTrace();
 		}
 	}
 

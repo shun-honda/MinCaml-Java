@@ -1,13 +1,17 @@
 package mincaml;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.objectweb.asm.Opcodes;
 
 import jvm.ClassBuilder;
 import jvm.ClassBuilder.MethodBuilder;
 import jvm.ClassBuilder.VarEntry;
 import jvm.CodeGenerator;
+import jvm.InvocationTarget;
+import jvm.JavaOperatorApi;
+import jvm.JavaStaticField;
 import jvm.UserDefinedClassLoader;
 
 public class JVMByteCodeGenerator extends CodeGenerator {
@@ -68,14 +72,20 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	public Class<?> generateClass() {
 		UserDefinedClassLoader loader = new UserDefinedClassLoader();
+		loader.setDump(true);
 		return loader.definedAndLoadClass(this.cBuilder.getInternalName(), cBuilder.toByteArray());
 	}
 
 	@Override
 	public void generateTopLevel(MinCamlTree node) {
+		this.mBuilder = this.cBuilder.newMethodBuilder(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, void.class, "main");
+		this.mBuilder.enterScope();
 		for(MinCamlTree child : node) {
 			child.generate(this);
 		}
+		this.mBuilder.exitScope();
+		this.mBuilder.returnValue(); // return stack top value
+		this.mBuilder.endMethod();
 		this.cBuilder.visitEnd();
 	}
 
@@ -100,28 +110,45 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	@Override
 	public void generateFunctionCall(MinCamlTree node) {
-		// TODO Auto-generated method stub
+		FunctionCall func = (FunctionCall) node.matched;
+		if(func.standard) {
+			String name = node.get(0).getText();
+			JavaStaticField field = MinCamlStandardApi.getInstance(name);
+			this.mBuilder.getStatic(field);
+			node.get(1).generate(this);
+			InvocationTarget target = MinCamlStandardApi.get(name);
+			this.mBuilder.callInvocationTarget(target);
+		} else {
 
+		}
 	}
 
 	@Override
 	public void generateArguments(MinCamlTree node) {
-		// TODO Auto-generated method stub
-
+		for(MinCamlTree child : node) {
+			child.generate(this);
+		}
 	}
 
 	@Override
 	public void generateLiteral(MinCamlTree node) {
-		// TODO Auto-generated method stub
-
+		Class<?> type = node.typed.getJavaClass();
+		if(type == int.class) {
+			this.mBuilder.push(Integer.parseInt(node.getText()));
+		} else if(type == float.class) {
+			this.mBuilder.push(Double.parseDouble(node.getText()));
+		} else if(type == boolean.class) {
+			this.mBuilder.push(Boolean.parseBoolean(node.getText()));
+		}
 	}
 
 	@Override
 	public void generateOperator(MinCamlTree node) {
+		node.get(0).generate(this);
+		node.get(1).generate(this);
 		Operator op = (Operator) node.matched;
-		Method method = op.getMethod();
-		// this.mBuilder.invokeStatic(Type.getType(JavaOperatorApi.class),
-		// method);
+		this.mBuilder.callStaticMethod(JavaOperatorApi.class, op.types[0].getJavaClass(), node.getTagName(),
+				op.types[1].getJavaClass(), op.types[2].getJavaClass());
 	}
 
 	@Override
