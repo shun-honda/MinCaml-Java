@@ -3,7 +3,9 @@ package mincaml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import jvm.ClassBuilder;
 import jvm.ClassBuilder.MethodBuilder;
@@ -153,14 +155,33 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	@Override
 	public void generateCompOperator(MinCamlTree node) {
-		// TODO Auto-generated method stub
-
+		node.get(0).generate(this);
+		node.get(1).generate(this);
+		CompOperator op = (CompOperator) node.matched;
+		this.mBuilder.callStaticMethod(JavaOperatorApi.class, op.types[0].getJavaClass(), node.getTagName(),
+				op.argType.getJavaClass(), op.argType.getJavaClass());
 	}
 
 	@Override
 	public void generateIfExpression(MinCamlTree node) {
-		// TODO Auto-generated method stub
+		node.get(0).generate(this);
+		this.mBuilder.push(true);
 
+		Label elseLabel = this.mBuilder.newLabel();
+		Label mergeLabel = this.mBuilder.newLabel();
+
+		this.mBuilder.ifCmp(Type.BOOLEAN_TYPE, this.mBuilder.NE, elseLabel);
+
+		// then
+		node.get(1).generate(this);
+		this.mBuilder.goTo(mergeLabel);
+
+		// else
+		this.mBuilder.mark(elseLabel);
+		node.get(2).generate(this);
+
+		// merge
+		this.mBuilder.mark(mergeLabel);
 	}
 
 }

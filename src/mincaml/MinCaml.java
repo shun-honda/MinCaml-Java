@@ -32,7 +32,7 @@ public class MinCaml {
 		} else {
 			MinCamlTransducer mincaml = new MinCamlTransducer();
 			MinCamlTree node = parse(mincaml, args[0]);
-			execute(mincaml, node, args[0]);
+			execute(mincaml, node);
 		}
 	}
 
@@ -92,7 +92,8 @@ public class MinCaml {
 		String command = null;
 		MinCamlTransducer mincaml = new MinCamlTransducer();
 		while((command = readLine()) != null) {
-			parse(mincaml, "<stdio>", linenum, command);
+			MinCamlTree node = parse(mincaml, "<stdio>", linenum, command);
+			execute(mincaml, node);
 			linenum += (command.split("\n").length);
 		}
 	}
@@ -115,7 +116,7 @@ public class MinCaml {
 		}
 	}
 
-	public static void execute(MinCamlTransducer mincaml, MinCamlTree node, String name) {
+	public static void execute(MinCamlTransducer mincaml, MinCamlTree node) {
 		JVMByteCodeGenerator generator = new JVMByteCodeGenerator(mincaml, "GeneratedClass");
 		node.generate(generator);
 		Class<?> mainClass = generator.generateClass();

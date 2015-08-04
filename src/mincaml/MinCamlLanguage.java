@@ -320,6 +320,7 @@ class Operator extends MinCamlTypeRule {
 }
 
 class CompOperator extends Operator {
+	MinCamlPrimitiveType argType;
 
 	public CompOperator(String name, MinCamlType[] types, String op) {
 		super(name, types, op);
@@ -344,6 +345,7 @@ class CompOperator extends Operator {
 			System.out.println("Type Error: second expression has " + nodeType2
 					+ " type, but second expression was expected " + nodeType1 + node + "\n");
 		}
+		this.argType = (MinCamlPrimitiveType) nodeType1;
 		return node.setType(this.types[0]);
 	}
 
