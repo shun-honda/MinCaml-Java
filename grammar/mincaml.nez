@@ -66,7 +66,7 @@ Pat
     = { @Identifier (_ ',' _ @Identifier)+ #Pat }
 
 ArrayCreateExpression
-    = { "Array.create" _ @GetArrayElementExpression _ @GetArrayElementExpression #ArrayCreate }
+    = { "Array.create" _ @ReadArrayElementExpression _ @ReadArrayElementExpression #ArrayCreate }
 
 EqualityExpression
     = RelationalExpression {@ _ '=' #Equals _ @RelationalExpression }*
@@ -94,13 +94,16 @@ inline addRelationalOperator
     / '>' ('=' #GreaterThanEquals / #GreaterThan)
 
 FunctionCall
-    = GetArrayElementExpression {@ _ @ActualArgList #FunctionCall }?
+    = WriteArrayElementExpression {@ _ @ActualArgList #FunctionCall }?
 
 ActualArgList
-    = { @GetArrayElementExpression (_ @GetArrayElementExpression)* #ActualArgList }
+    = { @WriteArrayElementExpression (_ @WriteArrayElementExpression)* #ActualArgList }
 
-GetArrayElementExpression
-    = SimpleExpression {@ '.' '(' _ @Expression _ ')' #ArrayElement }*
+WriteArrayElementExpression
+    = ReadArrayElementExpression {@ '.' '(' _ @Expression _ ')' _ '<-' _ @Expression #WriteArrayElement }?
+
+ReadArrayElementExpression
+    = SimpleExpression {@ '.' '(' _ @Expression _ ')' _ !'<-' #ReadArrayElement }*
 
 SimpleExpression
   = '(' _ Expression _ ')'
