@@ -82,7 +82,9 @@ public class MinCamlLanguage {
 		List<MinCamlType> argTypeList = new ArrayList<MinCamlType>();
 		for(int i = 0; i < args.length; i++) {
 			MinCamlTree arg = new MinCamlTree(Tag.tag(key("Name")), null, 0, 0, 0, "arg" + i);
-			arg.setType(mincaml.getType(args[i]));
+			MinCamlTypeVariable argType = new MinCamlTypeVariable(arg.getText());
+			argType.setType(mincaml.getType(args[i]));
+			arg.setType(argType);
 			argList.set(i, arg);
 			argTypeList.add(arg.typed);
 		}
@@ -181,16 +183,14 @@ class FunctionDecl extends MinCamlTypeRule {
 		mincaml = new MinCamlTransducer(mincaml);
 		MinCamlTree argsNode = node.get(1);
 		argsNode.matched = new Arguments(name, argsNode.size());
-		for(MinCamlTree arg : argsNode) {
-			mincaml.setName(arg.getText(), arg);
-		}
-		MinCamlType type = mincaml.typeCheck(node.get(2));
 		List<MinCamlType> types = new ArrayList<MinCamlType>();
 		for(MinCamlTree arg : argsNode) {
-			arg.typed = mincaml.getName(arg).typed;
+			arg.setType(new MinCamlTypeVariable(arg.getText()));
+			mincaml.setName(arg.getText(), arg);
 			types.add(arg.typed);
 		}
-		MinCamlReturnType funcRetType = funcType.getReturnType();
+		MinCamlType type = mincaml.typeCheck(node.get(2));
+		MinCamlTypeVariable funcRetType = funcType.getReturnType();
 		if(!funcRetType.isNull()) {
 			if(type != funcRetType.type) {
 				System.out.println("Type Error: function return type is expected " + type + " type, but " + funcRetType
@@ -232,24 +232,27 @@ class FunctionCall extends MinCamlTypeRule {
 			System.out.println("Argument Error: size of function '" + name + "' arguments is not match");
 		}
 		for(int i = 0; i < aArgs.size(); i++) {
-			MinCamlType fArgType = fArgs.get(i).typed;
+			MinCamlTypeVariable fArgType = (MinCamlTypeVariable) fArgs.get(i).typed;
 			MinCamlType aArgType = mincaml.typeCheck(aArgs.get(i));
-			if(fArgType == null) {
-				fArgs.get(i).setType(aArgType);
+			if(fArgType.isNull()) {
+				fArgType.setType(aArgType);
 				funcType.setArgType(i, aArgType);
-			} else if(aArgType instanceof MinCamlReturnType) {
-				if(!fArgType.equals(((MinCamlReturnType) aArgType).type)) {
+			} else if(aArgType instanceof MinCamlTypeVariable) {
+				if(!fArgType.equals(((MinCamlTypeVariable) aArgType).type)) {
 					System.out.println("Type Error: Argument" + i + 1 + " of function '" + name + "' is " + fArgType
 							+ " type, but " + aArgType + " type found" + aArgs + "\n");
 				}
 			} else {
-				if(!fArgType.equals(aArgType)) {
+				if(!fArgType.equalsType(aArgType)) {
 					System.out.println("Type Error: Argument" + i + 1 + " of function '" + name + "' is " + fArgType
 							+ " type, but " + aArgType + " type found" + aArgs + "\n");
 				}
 			}
 		}
-		return node.setType(funcType.retType);
+		if(funcType.retType.isNull()) {
+			return node.setType(funcType.retType);
+		}
+		return node.setType(funcType.retType.type);
 	}
 
 	@Override
@@ -309,10 +312,8 @@ abstract class Operator extends MinCamlTypeRule {
 					sub.setType(argType);
 					mincaml.getName(sub).setType(argType);
 				}
-			} else if(nodeType instanceof MinCamlReturnType) {
-				sub.setType(argType);
-				MinCamlFuncType funcType = (MinCamlFuncType) sub.get(0).typed;
-				funcType.setReturnType(argType);
+			} else if(nodeType instanceof MinCamlTypeVariable) {
+				((MinCamlTypeVariable) nodeType).setType(argType);
 			} else {
 				if(!nodeType.equals(argType)) {
 					System.out.println("Type Error: Argument" + i + 1 + " of operator '" + this.op + "' is " + argType
@@ -354,7 +355,7 @@ class BinaryOperator extends Operator {
 }
 
 class CompOperator extends Operator {
-	MinCamlPrimitiveType argType;
+	MinCamlType argType;
 
 	public CompOperator(String name, MinCamlType[] types, String op) {
 		super(name, types, op);
@@ -367,19 +368,25 @@ class CompOperator extends Operator {
 		MinCamlType nodeType2 = mincaml.typeCheck(node2);
 		if(nodeType1 == null && nodeType2 == null) {
 			return node.setType(this.types[0]);
+		} else if(nodeType1 instanceof MinCamlTypeVariable && nodeType2 instanceof MinCamlTypeVariable) {
+			return node.setType(this.types[0]);
 		} else if(nodeType1 == null) {
 			nodeType1 = nodeType2;
-			node1.setType(nodeType1);
+			node1.setType(nodeType2);
 			mincaml.getName(node1).setType(nodeType1);
+		} else if(nodeType1 instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) nodeType1).setType(nodeType2);
 		} else if(nodeType2 == null) {
 			nodeType2 = nodeType1;
 			node2.setType(nodeType2);
 			mincaml.getName(node2).setType(nodeType2);
+		} else if(nodeType2 instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) nodeType2).setType(nodeType2);
 		} else if(!nodeType1.equals(nodeType2)) {
 			System.out.println("Type Error: second expression has " + nodeType2
 					+ " type, but second expression was expected " + nodeType1 + node + "\n");
 		}
-		this.argType = (MinCamlPrimitiveType) nodeType1;
+		this.argType = nodeType1;
 		return node.setType(this.types[0]);
 	}
 
@@ -397,18 +404,45 @@ class IfExpression extends MinCamlTypeRule {
 	}
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
-		MinCamlType nodeType1 = mincaml.typeCheck(node.get(0));
-		if(nodeType1 != mincaml.getType("bool")) {
+		MinCamlTree node1 = node.get(0);
+		MinCamlType nodeType1 = mincaml.typeCheck(node1);
+		MinCamlType bool = mincaml.getType("bool");
+		if(nodeType1 instanceof MinCamlTypeVariable) {
+			node1.setType(bool);
+			MinCamlFuncType funcType = (MinCamlFuncType) node1.get(0).typed;
+			funcType.setReturnType(bool);
+		} else if(nodeType1 != bool) {
 			System.out.println("Type Error: The first expr of If is " + nodeType1
 					+ " type, but it is exprected of bool type" + node + "\n");
 		}
-		MinCamlType nodeType2 = mincaml.typeCheck(node.get(1));
-		MinCamlType nodeType3 = mincaml.typeCheck(node.get(2));
-		if(!nodeType2.equals(nodeType3)) {
+		MinCamlTree node2 = node.get(1);
+		MinCamlTree node3 = node.get(2);
+		MinCamlType nodeType2 = mincaml.typeCheck(node2);
+		MinCamlType nodeType3 = mincaml.typeCheck(node3);
+		MinCamlType retType = nodeType2;
+		if(nodeType2 == null && nodeType3 == null) {
+			System.out.println("Type Error: can not infer type " + node + "\n");
+			return MinCamlType.DefualtType;
+		} else if(nodeType2 == null) {
+			nodeType2 = nodeType3;
+			node2.setType(nodeType3);
+			mincaml.getName(node2).setType(nodeType3);
+			retType = nodeType3;
+		} else if(nodeType2 instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) nodeType2).setType(nodeType3);
+			retType = nodeType3;
+		} else if(nodeType3 == null) {
+			nodeType3 = nodeType2;
+			node2.setType(nodeType2);
+			mincaml.getName(node2).setType(nodeType2);
+		} else if(nodeType3 instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) nodeType3).setType(nodeType2);
+			retType = nodeType2;
+		} else if(!nodeType2.equals(nodeType3)) {
 			System.out.println("Type Error: else expression has " + nodeType3
 					+ " type, but else expression was expected " + nodeType2 + node + "\n");
 		}
-		return node.setType(nodeType2);
+		return node.setType(retType);
 	}
 
 	@Override

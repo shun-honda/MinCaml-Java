@@ -19,7 +19,7 @@ public class MinCamlTransducer {
 		this.setType("int", MinCamlType.DefualtType);
 		this.setType("float", new MinCamlPrimitiveType("float", double.class));
 		this.setType("bool", new MinCamlPrimitiveType("bool", boolean.class));
-		this.setType("unit", new MinCamlPrimitiveType("unit", Void.class));
+		this.setType("unit", new MinCamlPrimitiveType("unit", void.class));
 		new MinCamlLanguage(this);
 	}
 

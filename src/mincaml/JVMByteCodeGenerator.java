@@ -118,7 +118,6 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 		Class<?>[] paramClasses = new Class<?>[funcType.argTypeList.size()];
 		for(int i = 0; i < paramClasses.length; i++) {
 			paramClasses[i] = funcType.argTypeList.get(i).getJavaClass();
-
 		}
 		this.mBuilder = this.cBuilder.newMethodBuilder(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC,
 				funcType.retType.getJavaClass(), name, paramClasses);
@@ -200,7 +199,7 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 		node.get(1).generate(this);
 		CompOperator op = (CompOperator) node.matched;
 		this.mBuilder.callStaticMethod(JavaOperatorApi.class, op.types[0].getJavaClass(), node.getTagName(),
-				op.argType.getJavaClass(), op.argType.getJavaClass());
+				node.get(0).typed.getJavaClass(), node.get(1).typed.getJavaClass());
 	}
 
 	@Override

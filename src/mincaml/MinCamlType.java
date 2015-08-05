@@ -92,7 +92,7 @@ class MinCamlErrorType extends MinCamlType {
 
 class MinCamlFuncType extends MinCamlType {
 	boolean standard;
-	MinCamlReturnType retType = new MinCamlReturnType(this.name);
+	MinCamlTypeVariable retType = new MinCamlTypeVariable(this.name);
 	List<MinCamlType> argTypeList;
 
 	public MinCamlFuncType(String name) {
@@ -109,7 +109,7 @@ class MinCamlFuncType extends MinCamlType {
 		this.retType.setType(type);
 	}
 
-	public MinCamlReturnType getReturnType() {
+	public MinCamlTypeVariable getReturnType() {
 		return this.retType;
 	}
 
@@ -139,11 +139,11 @@ class MinCamlFuncType extends MinCamlType {
 	}
 }
 
-class MinCamlReturnType extends MinCamlType {
+class MinCamlTypeVariable extends MinCamlType {
 	MinCamlType type;
 
-	public MinCamlReturnType(String name) {
-		super("ret:" + name);
+	public MinCamlTypeVariable(String name) {
+		super("var:" + name);
 	}
 
 	public void setType(MinCamlType type) {
@@ -152,7 +152,7 @@ class MinCamlReturnType extends MinCamlType {
 
 	@Override
 	boolean equalsType(MinCamlType exprType) {
-		return false;
+		return this.type == exprType;
 	}
 
 	@Override
