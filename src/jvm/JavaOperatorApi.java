@@ -2,6 +2,18 @@ package jvm;
 
 public class JavaOperatorApi {
 
+	public static int Minus(int x) {
+		return -x;
+	}
+
+	public static double FMinus(double x) {
+		return -x;
+	}
+
+	public static boolean LogicalNot(boolean x) {
+		return !x;
+	}
+
 	public static int Add(int x, int y) {
 		return x + y;
 	}

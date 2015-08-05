@@ -21,6 +21,9 @@ public class MinCamlLanguage {
 		this.defineLiteral(mincaml, "#Integer", "int");
 		this.defineLiteral(mincaml, "#Float", "float");
 
+		this.defineUnary(mincaml, "#Minus", "int", "int", "-");
+		this.defineUnary(mincaml, "#FMinus", "float", "float", "-.");
+		this.defineUnary(mincaml, "#LogicalNot", "bool", "bool", "!");
 		this.defineBinary(mincaml, "#Add", "int", "int", "int", "+");
 		this.defineBinary(mincaml, "#Sub", "int", "int", "int", "-");
 		this.defineBinary(mincaml, "#Mul", "int", "int", "int", "*");
@@ -50,13 +53,20 @@ public class MinCamlLanguage {
 		mincaml.setTypeRule(new Literal(tname, t));
 	}
 
+	private void defineUnary(MinCamlTransducer mincaml, String tname, String rtype, String type1, String op) {
+		MinCamlType rt = mincaml.getType(rtype);
+		MinCamlType t1 = mincaml.getType(type1);
+		MinCamlType[] types = { rt, t1 };
+		mincaml.setTypeRule(new UnaryOperator(tname, types, op));
+	}
+
 	private void defineBinary(MinCamlTransducer mincaml, String tname, String rtype, String type1, String type2,
 			String op) {
 		MinCamlType rt = mincaml.getType(rtype);
 		MinCamlType t1 = mincaml.getType(type1);
 		MinCamlType t2 = mincaml.getType(type2);
 		MinCamlType[] types = { rt, t1, t2 };
-		mincaml.setTypeRule(new Operator(tname, types, op));
+		mincaml.setTypeRule(new BinaryOperator(tname, types, op));
 	}
 
 	private void defineComp(MinCamlTransducer mincaml, String tname, String rtype, String op) {
@@ -279,7 +289,7 @@ class Literal extends MinCamlTypeRule {
 	}
 }
 
-class Operator extends MinCamlTypeRule {
+abstract class Operator extends MinCamlTypeRule {
 	MinCamlType[] types;
 	String op;
 
@@ -314,9 +324,33 @@ class Operator extends MinCamlTypeRule {
 	}
 
 	@Override
-	public void generate(MinCamlTree node, CodeGenerator generator) {
-		generator.generateOperator(node);
+	public abstract void generate(MinCamlTree node, CodeGenerator generator);
+}
+
+class UnaryOperator extends Operator {
+
+	public UnaryOperator(String name, MinCamlType[] types, String op) {
+		super(name, types, op);
 	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateUnaryOperator(node);
+	}
+
+}
+
+class BinaryOperator extends Operator {
+
+	public BinaryOperator(String name, MinCamlType[] types, String op) {
+		super(name, types, op);
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateBinaryOperator(node);
+	}
+
 }
 
 class CompOperator extends Operator {

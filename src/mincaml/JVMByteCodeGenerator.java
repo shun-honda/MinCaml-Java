@@ -178,7 +178,15 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 	}
 
 	@Override
-	public void generateOperator(MinCamlTree node) {
+	public void generateUnaryOperator(MinCamlTree node) {
+		node.get(0).generate(this);
+		Operator op = (Operator) node.matched;
+		this.mBuilder.callStaticMethod(JavaOperatorApi.class, op.types[0].getJavaClass(), node.getTagName(),
+				op.types[1].getJavaClass());
+	}
+
+	@Override
+	public void generateBinaryOperator(MinCamlTree node) {
 		node.get(0).generate(this);
 		node.get(1).generate(this);
 		Operator op = (Operator) node.matched;

@@ -18,7 +18,9 @@ public abstract class CodeGenerator {
 
 	public abstract void generateLiteral(MinCamlTree node);
 
-	public abstract void generateOperator(MinCamlTree node);
+	public abstract void generateUnaryOperator(MinCamlTree node);
+
+	public abstract void generateBinaryOperator(MinCamlTree node);
 
 	public abstract void generateCompOperator(MinCamlTree node);
 
