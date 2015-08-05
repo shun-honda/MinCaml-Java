@@ -139,6 +139,35 @@ class MinCamlFuncType extends MinCamlType {
 	}
 }
 
+class MinCamlArrayType extends MinCamlType {
+	MinCamlType type;
+
+	public MinCamlArrayType(String name, MinCamlType type) {
+		super("array:" + name);
+		this.type = type;
+	}
+
+	public void setType(MinCamlType type) {
+		this.type = type;
+	}
+
+	@Override
+	boolean equalsType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean matchType(MinCamlType exprType) {
+		return false;
+	}
+
+	@Override
+	boolean isGreekType() {
+		return false;
+	}
+
+}
+
 class MinCamlTypeVariable extends MinCamlType {
 	MinCamlType type;
 

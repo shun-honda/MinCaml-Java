@@ -26,4 +26,6 @@ public abstract class CodeGenerator {
 
 	public abstract void generateIfExpression(MinCamlTree node);
 
+	public abstract void generateArrayCreate(MinCamlTree node);
+
 }

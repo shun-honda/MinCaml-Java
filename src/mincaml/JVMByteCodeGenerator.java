@@ -224,4 +224,10 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 		this.mBuilder.mark(mergeLabel);
 	}
 
+	@Override
+	public void generateArrayCreate(MinCamlTree node) {
+		// TODO Auto-generated method stub
+
+	}
+
 }

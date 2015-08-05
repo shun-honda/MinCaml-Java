@@ -15,6 +15,7 @@ public class MinCamlLanguage {
 		mincaml.setTypeRule(new FunctionCall(key("FunctionCall")));
 		mincaml.setTypeRule(new Variable(key("Name")));
 		mincaml.setTypeRule(new IfExpression(key("If")));
+		mincaml.setTypeRule(new ArrayCreate(key("ArrayCreate"), mincaml.getType("int")));
 
 		this.defineLiteral(mincaml, "#True", "bool");
 		this.defineLiteral(mincaml, "#False", "bool");
@@ -449,4 +450,33 @@ class IfExpression extends MinCamlTypeRule {
 	public void generate(MinCamlTree node, CodeGenerator generator) {
 		generator.generateIfExpression(node);
 	}
+}
+
+class ArrayCreate extends MinCamlTypeRule {
+	int size;
+	MinCamlType type;
+
+	public ArrayCreate(String name, MinCamlType type) {
+		super(name, 2);
+		this.type = type;
+	}
+
+	@Override
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlTree node1 = node.get(0);
+		MinCamlType type1 = mincaml.typeCheck(node1);
+		if(!type1.equalsType(mincaml.getType("int"))) {
+			System.out.println("TypeError: first argument of Array.create is expected int type, but found " + type1
+					+ " type" + node1 + "\n");
+		}
+		MinCamlType type2 = mincaml.typeCheck(node.get(1));
+		MinCamlArrayType arrayType = new MinCamlArrayType(name, type2);
+		return arrayType;
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateArrayCreate(node);
+	}
+
 }
