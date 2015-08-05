@@ -23,19 +23,36 @@ public class MinCaml {
 	private static Grammar grammar;
 	private static MinCamlTreeTransducer treeTransducer;
 
+	private static boolean Shell = false;
+	private static String File = null;
+
 	public static final void main(String[] args) {
 		displayVersion();
 		grammar = newMinCamlGrammar();
 		treeTransducer = new MinCamlTreeTransducer();
-		if(args.length == 0) {
+		parseCommandArguments(args);
+		if(Shell) {
 			shell();
 		} else {
 			long start = System.currentTimeMillis();
 			MinCamlTransducer mincaml = new MinCamlTransducer();
-			MinCamlTree node = parse(mincaml, args[0]);
+			MinCamlTree node = parse(mincaml, File);
 			execute(mincaml, node);
 			long end = System.currentTimeMillis();
 			System.out.println((end - start) + "ms");
+		}
+	}
+
+	public final static void parseCommandArguments(String[] args) {
+		if(args.length == 0) {
+			Shell = true;
+		}
+		int index = 0;
+		while(index < args.length) {
+			String arg = args[index++];
+			if(arg.equals("-f")) {
+				File = args[index++];
+			}
 		}
 	}
 
