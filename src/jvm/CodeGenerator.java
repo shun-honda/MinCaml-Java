@@ -28,4 +28,8 @@ public abstract class CodeGenerator {
 
 	public abstract void generateArrayCreate(MinCamlTree node);
 
+	public abstract void generateReadArray(MinCamlTree node);
+
+	public abstract void generateWriteArray(MinCamlTree node);
+
 }

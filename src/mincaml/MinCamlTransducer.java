@@ -10,12 +10,14 @@ public class MinCamlTransducer {
 	Map<String, MinCamlType> typeMap;
 	Map<String, MinCamlTypeRule> typeRuleMap;
 	Map<String, MinCamlTree> nameMap;
+	Map<MinCamlTree, String> arrayMap;
 
 	public MinCamlTransducer() {
 		this.parent = null;
 		this.typeMap = new HashMap<String, MinCamlType>();
 		this.typeRuleMap = new HashMap<String, MinCamlTypeRule>();
 		this.nameMap = new HashMap<String, MinCamlTree>();
+		this.arrayMap = new HashMap<MinCamlTree, String>();
 		this.setType("int", MinCamlType.DefualtType);
 		this.setType("float", new MinCamlPrimitiveType("float", double.class));
 		this.setType("bool", new MinCamlPrimitiveType("bool", boolean.class));
@@ -28,6 +30,7 @@ public class MinCamlTransducer {
 		this.typeMap = new HashMap<String, MinCamlType>();
 		this.typeRuleMap = new HashMap<String, MinCamlTypeRule>();
 		this.nameMap = new HashMap<String, MinCamlTree>();
+		this.arrayMap = new HashMap<MinCamlTree, String>();
 	}
 
 	public final void setType(String name, MinCamlType t) {
@@ -82,6 +85,33 @@ public class MinCamlTransducer {
 			mincaml = mincaml.parent;
 		}
 		System.out.println("Name Error: Name '" + name + "' is not found (pos=" + nameNode.getSourcePosition() + ")");
+		System.exit(1);
+		return null;
+	}
+
+	public final void setArrayName(MinCamlTree node, String name) {
+		MinCamlTransducer mincaml = this;
+		while(mincaml != null) {
+			if(mincaml.arrayMap.containsKey(node)) {
+				System.out.println("Array Error: Array '" + node + "' is re-defined ");
+				return;
+			}
+			mincaml = mincaml.parent;
+		}
+		this.arrayMap.put(node, name);
+	}
+
+	public final String getArrayName(MinCamlTree arrayNode) {
+		MinCamlTransducer mincaml = this;
+		while(mincaml != null) {
+			String name = mincaml.arrayMap.get(arrayNode);
+			if(name != null) {
+				return name;
+			}
+			mincaml = mincaml.parent;
+		}
+		System.out.println(
+				"Array Error: array '" + arrayNode + "' is not found (pos=" + arrayNode.getSourcePosition() + ")");
 		System.exit(1);
 		return null;
 	}

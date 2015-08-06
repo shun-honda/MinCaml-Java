@@ -1,5 +1,6 @@
 package mincaml;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -98,9 +99,14 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 	@Override
 	public void generateVarDecl(MinCamlTree node) {
 		MinCamlTree varNode = node.get(0);
-		node.get(1).generate(this);
-		this.scope.setLocalVar(varNode.getText(), this.mBuilder.createNewVarAndStore(varNode.typed.getJavaClass()));
-		node.get(2).generate(this);
+		if(varNode.typed instanceof MinCamlArrayType) {
+			node.get(1).generate(this);
+			node.get(2).generate(this);
+		} else {
+			node.get(1).generate(this);
+			this.scope.setLocalVar(varNode.getText(), this.mBuilder.createNewVarAndStore(varNode.typed.getJavaClass()));
+			node.get(2).generate(this);
+		}
 	}
 
 	@Override
@@ -226,6 +232,39 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	@Override
 	public void generateArrayCreate(MinCamlTree node) {
+		// type
+		MinCamlArrayType arrayType = (MinCamlArrayType) node.typed;
+		Class<?> arrayTypeClass = arrayType.getJavaClass();
+		Class<?> elementTypeClass = arrayType.getElementType();
+		Type elementType = Type.getType(elementTypeClass);
+
+		// array size
+		node.get(0).generate(this);
+
+		// new array
+		this.mBuilder.newArray(elementType);
+		this.scope.setLocalVar(node.getText(), this.mBuilder.createNewVarAndStore(arrayTypeClass));
+
+		// array initialize
+		this.mBuilder.loadFromVar(this.scope.getLocalVar(node.getText()));
+		node.get(1).generate(this);
+		this.mBuilder.callStaticMethod(Arrays.class, void.class, "fill", arrayTypeClass, elementTypeClass);
+	}
+
+	@Override
+	public void generateReadArray(MinCamlTree node) {
+		// load array variable
+		this.mBuilder.loadFromVar(this.scope.getLocalVar(node.get(0).getText()));
+
+		// index
+		node.get(1).generate(this);
+
+		// load array element
+		this.mBuilder.loadFromArrayVar(node.typed.getJavaClass());
+	}
+
+	@Override
+	public void generateWriteArray(MinCamlTree node) {
 		// TODO Auto-generated method stub
 
 	}

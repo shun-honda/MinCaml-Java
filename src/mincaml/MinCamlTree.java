@@ -65,6 +65,10 @@ public class MinCamlTree extends AbstractTree<MinCamlTree>implements SourcePosit
 		return this.typed;
 	}
 
+	public final void setValue(String name) {
+		this.value = name;
+	}
+
 	public void generate(CodeGenerator generator) {
 		this.matched.generate(this, generator);
 	}

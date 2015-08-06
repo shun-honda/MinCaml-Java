@@ -306,6 +306,16 @@ public class ClassBuilder extends ClassWriter implements Opcodes {
 		}
 
 		/**
+		 * load value from local variable and put it at stack top.
+		 *
+		 * @param elementClass
+		 */
+		public void loadFromArrayVar(Class<?> elementClass) {
+			Type typeDesc = Type.getType(elementClass);
+			this.visitInsn(typeDesc.getOpcode(IALOAD));
+		}
+
+		/**
 		 * generate line number.
 		 * 
 		 * @param lineNum

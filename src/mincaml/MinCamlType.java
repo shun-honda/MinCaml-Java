@@ -143,7 +143,7 @@ class MinCamlArrayType extends MinCamlType {
 	MinCamlType type;
 
 	public MinCamlArrayType(String name, MinCamlType type) {
-		super("array:" + name);
+		super("array");
 		this.type = type;
 	}
 
@@ -153,7 +153,7 @@ class MinCamlArrayType extends MinCamlType {
 
 	@Override
 	boolean equalsType(MinCamlType exprType) {
-		return false;
+		return this.type == exprType;
 	}
 
 	@Override
@@ -164,6 +164,37 @@ class MinCamlArrayType extends MinCamlType {
 	@Override
 	boolean isGreekType() {
 		return false;
+	}
+
+	@Override
+	public Class<?> getJavaClass() {
+		if(this.type == null) {
+			return this.getClass();
+		}
+		Class<?> javaTypeClass = this.type.getJavaClass();
+		if(javaTypeClass == int.class) {
+			return int[].class;
+		} else if(javaTypeClass == double.class) {
+			return double[].class;
+		} else if(javaTypeClass == boolean.class) {
+			return boolean[].class;
+		}
+		return this.type.getJavaClass();
+	}
+
+	public Class<?> getElementType() {
+		if(this.type == null) {
+			return null;
+		}
+		return this.type.getJavaClass();
+	}
+
+	@Override
+	public String toString() {
+		if(this.type != null) {
+			return this.getName() + "(" + this.type.toString() + ")";
+		}
+		return this.getName();
 	}
 
 }

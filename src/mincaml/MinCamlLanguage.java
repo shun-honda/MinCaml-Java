@@ -16,6 +16,8 @@ public class MinCamlLanguage {
 		mincaml.setTypeRule(new Variable(key("Name")));
 		mincaml.setTypeRule(new IfExpression(key("If")));
 		mincaml.setTypeRule(new ArrayCreate(key("ArrayCreate"), mincaml.getType("int")));
+		mincaml.setTypeRule(new ReadArray(key("ReadArrayElement")));
+		mincaml.setTypeRule(new WriteArray(key("WriteArrayElement")));
 
 		this.defineLiteral(mincaml, "#True", "bool");
 		this.defineLiteral(mincaml, "#False", "bool");
@@ -129,9 +131,14 @@ class VarDecl extends MinCamlTypeRule {
 
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree nameNode = node.get(0);
+		MinCamlTree elementNode = node.get(1);
 		String name = nameNode.getText();
 		mincaml = new MinCamlTransducer(mincaml);
-		MinCamlType type = mincaml.typeCheck(node.get(1));
+		Tag tag = elementNode.getTag();
+		if(tag.equals(Tag.tag("ArrayCreate"))) {
+			mincaml.setArrayName(elementNode, name);
+		}
+		MinCamlType type = mincaml.typeCheck(elementNode);
 		mincaml = mincaml.parent;
 		nameNode.setType(type);
 		mincaml.setName(name, nameNode);
@@ -471,12 +478,80 @@ class ArrayCreate extends MinCamlTypeRule {
 		}
 		MinCamlType type2 = mincaml.typeCheck(node.get(1));
 		MinCamlArrayType arrayType = new MinCamlArrayType(name, type2);
-		return arrayType;
+		node.setValue(mincaml.getArrayName(node));
+		return node.setType(arrayType);
 	}
 
 	@Override
 	public void generate(MinCamlTree node, CodeGenerator generator) {
 		generator.generateArrayCreate(node);
+	}
+
+}
+
+class ReadArray extends MinCamlTypeRule {
+
+	public ReadArray(String name) {
+		super(name, 0);
+	}
+
+	@Override
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlType type = mincaml.typeCheck(node.get(0));
+		MinCamlArrayType arrayType = null;
+		if(type instanceof MinCamlArrayType) {
+			arrayType = (MinCamlArrayType) type;
+		} else {
+			System.out.println("TypeError: this variable is expected array type, but found " + type + " type"
+					+ node.get(0) + "\n");
+		}
+		MinCamlType indexType = mincaml.typeCheck(node.get(1));
+		if(!indexType.equalsType(mincaml.getType("int"))) {
+			System.out.println("TypeError: index of read array expression is expected int type, but found " + indexType
+					+ " type" + node.get(1) + "\n");
+		}
+		return node.setType(arrayType.type);
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateReadArray(node);
+	}
+
+}
+
+class WriteArray extends MinCamlTypeRule {
+
+	public WriteArray(String name) {
+		super(name, 0);
+	}
+
+	@Override
+	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
+		MinCamlType type = mincaml.typeCheck(node.get(0));
+		MinCamlArrayType arrayType = null;
+		if(type instanceof MinCamlArrayType) {
+			arrayType = (MinCamlArrayType) type;
+		} else {
+			System.out.println("TypeError: this variable is expected array type, but found " + type + " type"
+					+ node.get(0) + "\n");
+		}
+		MinCamlType indexType = mincaml.typeCheck(node.get(1));
+		if(!indexType.equalsType(mincaml.getType("int"))) {
+			System.out.println("TypeError: index of write array expression is expected int type, but found " + indexType
+					+ " type" + node.get(1) + "\n");
+		}
+		MinCamlType elementType = mincaml.typeCheck(node.get(2));
+		if(!elementType.equalsType(arrayType.type)) {
+			System.out.println("TypeError: Array Elements are expected " + arrayType.type + " type, but found "
+					+ elementType + " type" + node.get(2) + "\n");
+		}
+		return node.setType(mincaml.getType("unit"));
+	}
+
+	@Override
+	public void generate(MinCamlTree node, CodeGenerator generator) {
+		generator.generateWriteArray(node);
 	}
 
 }
