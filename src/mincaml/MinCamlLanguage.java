@@ -472,7 +472,10 @@ class ArrayCreate extends MinCamlTypeRule {
 	public MinCamlType match(MinCamlTransducer mincaml, MinCamlTree node) {
 		MinCamlTree node1 = node.get(0);
 		MinCamlType type1 = mincaml.typeCheck(node1);
-		if(!type1.equalsType(mincaml.getType("int"))) {
+		MinCamlType intType = mincaml.getType("int");
+		if(type1 instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) type1).setType(intType);
+		} else if(!type1.equalsType(intType)) {
 			System.out.println("TypeError: first argument of Array.create is expected int type, but found " + type1
 					+ " type" + node1 + "\n");
 		}
@@ -537,7 +540,10 @@ class WriteArray extends MinCamlTypeRule {
 					+ node.get(0) + "\n");
 		}
 		MinCamlType indexType = mincaml.typeCheck(node.get(1));
-		if(!indexType.equalsType(mincaml.getType("int"))) {
+		MinCamlType intType = mincaml.getType("int");
+		if(indexType instanceof MinCamlTypeVariable) {
+			((MinCamlTypeVariable) indexType).setType(intType);
+		} else if(!indexType.equalsType(intType)) {
 			System.out.println("TypeError: index of write array expression is expected int type, but found " + indexType
 					+ " type" + node.get(1) + "\n");
 		}
