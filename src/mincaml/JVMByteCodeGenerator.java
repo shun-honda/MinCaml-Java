@@ -265,8 +265,16 @@ public class JVMByteCodeGenerator extends CodeGenerator {
 
 	@Override
 	public void generateWriteArray(MinCamlTree node) {
-		// TODO Auto-generated method stub
+		// load array variable
+		this.mBuilder.loadFromVar(this.scope.getLocalVar(node.get(0).getText()));
 
+		// index
+		node.get(1).generate(this);
+
+		// store array element
+		node.get(2).generate(this);
+		MinCamlArrayType arrayType = (MinCamlArrayType) node.get(0).typed;
+		this.mBuilder.storeToArrayVar(arrayType.getElementType());
 	}
 
 }

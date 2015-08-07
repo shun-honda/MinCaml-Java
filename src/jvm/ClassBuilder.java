@@ -296,6 +296,16 @@ public class ClassBuilder extends ClassWriter implements Opcodes {
 		}
 
 		/**
+		 * store stack top value to local array variable.
+		 * 
+		 * @param elementClass
+		 */
+		public void storeToArrayVar(Class<?> elementClass) {
+			Type typeDesc = Type.getType(elementClass);
+			this.visitInsn(typeDesc.getOpcode(IASTORE));
+		}
+
+		/**
 		 * load value from local variable and put it at stack top.
 		 * 
 		 * @param entry
@@ -306,7 +316,7 @@ public class ClassBuilder extends ClassWriter implements Opcodes {
 		}
 
 		/**
-		 * load value from local variable and put it at stack top.
+		 * load value from local array variable and put it at stack top.
 		 *
 		 * @param elementClass
 		 */
